@@ -1,0 +1,135 @@
+---
+title: "Course Project 1"
+author: "Christian J. Lagares Nieves"
+date: "July 9, 2015"
+output: html_document
+---
+
+This is the complete documentation for the Course Project 1 in the Exploratory Data Analysis of the Data Science Specialization on Coursera. It contains the entire source code for each one of the 5 parts as well as the outputs for further evaluation.
+
+The project uses a subset of data from the UC Irvine Machine Learning Repository related to Electric Power Consumption.
+
+The first segment of the project is "load_data.R":
+
+```{r, echo = TRUE}
+
+library(httr) 
+
+# URL to the Data
+Direction <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip"
+Data <- "Data"
+
+# Verifying existance of file to cache if possible.
+if(!file.exists(Data)){
+	dir.create(Data)
+} 
+figures<- "Figures" 
+if(!file.exists(figures)){
+	dir.create(figures)
+}
+Archive <- paste(getwd(), "/Data/household_power_consumption.zip", sep = "")
+if(!file.exists(Archive)){
+	download.file(Direction, Archive, method="curl", mode="wb")
+}
+Archive <- paste(getwd(), "/Data/household_power_consumption.txt", sep = "")
+if(!file.exists(Archive)){
+	unzip(Archive, list = FALSE, overwrite = FALSE, exdir = Data)
+}
+
+ResumedData <- paste(getwd(), "/Data/ResumedData.rds", sep = "")
+if(!file.exists(ResumedData)){
+	Data <- "Data/household_power_consumption.txt"
+	LoadData <- read.table(Data, header=TRUE, sep=";", colClasses=c("character", "character", rep("numeric",7)), na="?")
+	LoadData$Time <- strptime(paste(LoadData$Date, LoadData$Time), "%d/%m/%Y %H:%M:%S")
+	LoadData$Date <- as.Date(LoadData$Date, "%d/%m/%Y")
+	Dates <- as.Date(c("2007-02-01", "2007-02-02"), "%Y-%m-%d")
+	LoadData <- subset(LoadData, Date %in% Dates)
+	Resumed_Data <- paste(getwd(), "/", "Data", "/", "Resumed_Data", ".rds", sep="")
+	saveRDS(LoadData, Resumed_Data)
+} else {
+	Data <- "Data/Resumed_Data.rds"
+	LoadData <- readRDS(Data)
+}
+```
+
+Know employing the data loaded in the first segment of the project [plot1.R], we'll plot the frequency of the Global Active Power:
+
+```{r, echo = TRUE}
+source("load_data.R")
+
+plot1 <- paste(getwd(), "/Figures/plot1.png", sep = "")
+if(!file.exists(plot1)){
+	png("Figures/plot1.png", width = 480, height = 480)
+	hist(LoadData$Global_active_power, main = "Global Active Power", xlab = "Global Active Power (kilowatts)", ylab = "Frequency", col = "red")
+	dev.off()
+} else {
+	hist(LoadData$Global_active_power, main = "Global Active Power", xlab = "Global Active Power (kilowatts)", ylab = "Frequency", col = "red")
+}
+```
+
+We'll now plot Global Active Power as a function of weekdays [plot2.R]:
+
+```{r, echo = TRUE}
+source("load_data.R")
+
+plot2 <- paste(getwd(), "/Figures/plot2.png", sep = "")
+if(!file.exists(plot2)){
+	png("Figures/plot2.png", width = 480, height = 480)
+	plot(LoadData$Time, LoadData$Global_active_power, type = "l", xlab = "", ylab = "Global Active Power (kilowatts)")
+	dev.off()
+} else {
+	plot(LoadData$Time, LoadData$Global_active_power, type = "l", xlab = "", ylab = "Global Active Power (kilowatts)")
+}
+```
+
+We'll now plot Energy Sub Metering as a function of weekdays [plot3.R]:
+
+```{r, echo = TRUE}
+source("load_data.R")
+
+plot3 <- paste(getwd(), "/Figures/plot3.png", sep = "")
+if(!file.exists(plot3)){
+	png("Figures/plot3.png", width = 480, height = 480)
+	plot(LoadData$Time, LoadData$Sub_metering_1, type = "l", col = "black", xlab = "", ylab = "Energy sub metering")
+	lines(LoadData$Time, LoadData$Sub_metering_2, type="l", col="red")
+	lines(LoadData$Time, LoadData$Sub_metering_3, type="l", col="blue")
+	legend("topright", legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lwd=2, col=c("black", "red", "blue"))
+	dev.off()
+} else {
+	plot(LoadData$Time, LoadData$Sub_metering_1, type = "l", col = "black", xlab = "", ylab = "Energy sub metering")
+	lines(LoadData$Time, LoadData$Sub_metering_2, type="l", col="red")
+	lines(LoadData$Time, LoadData$Sub_metering_3, type="l", col="blue")
+	legend("topright", legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lwd=2, col=c("black", "red", "blue"))
+}
+```
+
+Now let's compare some results to draw some visual conclusions [plot4.R]:
+
+```{r, echo = TRUE}
+source("load_data.R")
+
+plot4 <- paste(getwd(), "/Figures/plot4.png", sep = "")
+if(!file.exists(plot4)){
+	png("Figures/plot4.png", width = 480, height = 480)
+	par(mfrow=c(2,2))	
+	plot(LoadData$Time, LoadData$Global_active_power, type = "l", xlab = "", ylab = "Global Active Power")
+	plot(LoadData$Time, LoadData$Voltage, type = "l", xlab = "datetime", ylab = "Global Active Power")
+	plot(LoadData$Time, LoadData$Sub_metering_1, type = "l", col = "black", xlab = "", ylab = "Energy sub metering")
+	lines(LoadData$Time, LoadData$Sub_metering_2, type="l", col="red")
+	lines(LoadData$Time, LoadData$Sub_metering_3, type="l", col="blue")
+	legend("topright", legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lwd=2, col=c("black", "red", "blue"))
+	plot(LoadData$Time, LoadData$Global_reactive_power, type = "l", xlab = "datetime", ylab = "Global Active Power")
+	dev.off()
+} else {
+	par(mfrow=c(2,2))	
+	plot(LoadData$Time, LoadData$Global_active_power, type = "l", xlab = "", ylab = "Global Active Power")
+	plot(LoadData$Time, LoadData$Voltage, type = "l", xlab = "datetime", ylab = "Global Active Power")
+	plot(LoadData$Time, LoadData$Sub_metering_1, type = "l", col = "black", xlab = "", ylab = "Energy sub metering")
+	lines(LoadData$Time, LoadData$Sub_metering_2, type="l", col="red")
+	lines(LoadData$Time, LoadData$Sub_metering_3, type="l", col="blue")
+	legend("topright", legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lwd=2, col=c("black", "red", "blue"))
+	plot(LoadData$Time, LoadData$Global_reactive_power, type = "l", xlab = "datetime", ylab = "Global Active Power")
+}
+```
+
+The project does not require any further work, and this Markdown is a means of helping its readability.
